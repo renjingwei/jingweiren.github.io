@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "dashboard"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
@@ -11,6 +11,7 @@ library(tidyverse)
 library(viridis)
 ## Loading required package: viridisLite
 library(flexdashboard)
+library(p8105.datasets)
 library(plotly)
 ```
 
@@ -20,7 +21,33 @@ Column {data-width=650}
 ### Chart A
 
 ```{r}
+data("ny_noaa")
+clean_ny_noaa = ny_noaa %>% 
+  janitor::clean_names() %>% 
+  separate(date, into = c("year", "month", "day"), sep = "-") %>% 
+  mutate(prcp = prcp / 10, tmax = as.numeric(tmax) / 10, tmin = as.numeric(tmin) / 10)
 
+
+ jan = clean_ny_noaa %>% 
+  filter(month %in% c("01")) %>% 
+  mutate(month = recode(month, "01" = "January"), year = as.numeric(year)) %>% 
+  group_by(year, month) %>% 
+  summarize(average_max = mean(tmax, na.rm = TRUE)) %>% 
+  ggplot(aes(x = year, y = average_max)) +
+  geom_line() +
+scale_x_discrete(breaks = c(1981, 1987, 1993, 1999, 2005, 2010))+
+  labs(
+    title = "average max temperature in January in each station across years",
+    x = "year",
+    y = "average max temperature (C)",
+    caption = "Data from p8105.datasets package"
+  )  + 
+  facet_grid(~ month)+
+viridis::scale_color_viridis(
+    name = "month", 
+    discrete = TRUE)
+ 
+ ggplotly(jan) 
 ```
 
 Column {data-width=350}
@@ -29,11 +56,36 @@ Column {data-width=350}
 ### Chart B
 
 ```{r}
+library(hexbin)
+temperature = clean_ny_noaa %>% 
+  ggplot(aes(x = tmax, y = tmin)) +
+  geom_hex() +
+  labs(
+    title = " tmax vs tmin for the full dataset",
+    x = "maximum temperature (C)",
+    y = "minimum temperature (C)",
+ caption = "Data from p8105.datasets package"
+  )
+
+  ggplotly(temperature)
 
 ```
 
 ### Chart C
 
 ```{r}
+snowfall=clean_ny_noaa %>% 
+  filter(snow > 0 & snow < 100) %>% 
+  ggplot(aes(x = year, y = snow, fill = year)) +
+  geom_boxplot() +
+  scale_x_discrete(breaks = c(1981, 1987, 1993, 1999, 2005, 2010)) +
+    labs(
+      x = "Year",
+      y = "Snowfall (mm)",
+      title = "alues greater than 0 and less than 100 separately by year",
+       caption = "Data from p8105.datasets package"
+    ) 
+
+  ggplotly(snowfall)
 
 ```

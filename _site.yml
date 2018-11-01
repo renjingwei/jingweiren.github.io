@@ -11,5 +11,7 @@ navbar:
       href: https://github.com/renjingwei
     - text: "resume"
       href: resume.html
+      - text: "dashboard"
+      href: dashboard.html
 output:
   html_document
